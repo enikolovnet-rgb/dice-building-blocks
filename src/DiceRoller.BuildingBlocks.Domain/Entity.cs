@@ -1,4 +1,4 @@
-3namespace DiceRoller.BuildingBlocks.Domain;
+namespace DiceRoller.BuildingBlocks.Domain;
 
 /// <summary>
 /// Base class for entities: objects defined by their identity rather than their attributes.
