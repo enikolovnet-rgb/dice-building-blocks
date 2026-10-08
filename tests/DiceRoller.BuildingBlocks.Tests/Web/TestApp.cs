@@ -36,13 +36,37 @@ internal static class TestApp
 
     public static async Task<JsonElement> ReadProblemAsync(HttpResponseMessage response)
     {
-        response.Content.Headers.ContentType?.MediaType.ShouldBe(ErrorMapper.ContentType);
+        response.Content.Headers.ContentType.ShouldNotBeNull();
+        response.Content.Headers.ContentType.MediaType.ShouldBe(ErrorMapper.ContentType);
         var json = await response.Content.ReadAsStringAsync(Ct);
         return JsonDocument.Parse(json).RootElement.Clone();
     }
 
     public static string[] PropertyNames(JsonElement element) =>
         [.. element.EnumerateObject().Select(property => property.Name)];
+
+    /// <summary>
+    /// The shape of an error body: each property with its JSON kind, sorted by name. <c>errors</c> is reported as
+    /// <c>Object</c> only when every value is an array of strings.
+    /// </summary>
+    public static string[] Shape(JsonElement problem) =>
+    [
+        .. problem.EnumerateObject()
+            .Select(property => $"{property.Name}:{KindOf(property)}")
+            .Order(StringComparer.Ordinal),
+    ];
+
+    private static string KindOf(JsonProperty property)
+    {
+        var kind = property.Value.ValueKind;
+        var isErrorsMap = property.Name == "errors"
+            && kind == JsonValueKind.Object
+            && property.Value.EnumerateObject().All(field =>
+                field.Value.ValueKind == JsonValueKind.Array
+                && field.Value.EnumerateArray().All(message => message.ValueKind == JsonValueKind.String));
+
+        return property.Name == "errors" && !isErrorsMap ? $"invalid {kind}" : kind.ToString();
+    }
 
     public static Dictionary<string, string[]> Errors(JsonElement problem) =>
         problem.GetProperty("errors").EnumerateObject().ToDictionary(
