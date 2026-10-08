@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>DDD building blocks for DiceRoller services: Entity, ValueObject, Result, Error, DomainException, Guard. No dependencies beyond the BCL.</Description>
+  </PropertyGroup>
+
+</Project>
